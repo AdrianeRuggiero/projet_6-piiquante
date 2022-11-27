@@ -15,5 +15,6 @@ module.exports = (req, res, next) => {
     next();
   } catch (error) {
     res.status(status.UNAUTHORIZED).json({ error });
+    console.log(mongooseErrorBeautify(error))
   }
 };

@@ -12,9 +12,15 @@ exports.signup = (req, res, next) => {
       });
       user.save()
         .then(() => res.status(status.CREATED).json({ message: 'Utilisateur créé !' }))
-        .catch(error => res.status(status.BAD_REQUEST).json({ error }));
+        .catch(error => {
+          res.status(status.BAD_REQUEST).json({ error })
+          console.log(mongooseErrorBeautify(error))
+        });
     })
-    .catch(error => res.status(status.INTERNAL_SERVER_ERROR).json({ error }));
+    .catch(error => {
+      res.status(status.INTERNAL_SERVER_ERROR).json({ error })
+      console.log(mongooseErrorBeautify(error))
+    });
 };
 
 exports.login = (req, res, next) => {
@@ -35,7 +41,13 @@ exports.login = (req, res, next) => {
             )
           });
         })
-        .catch(error => res.status(status.INTERNAL_SERVER_ERROR).json({ error }));
+        .catch(error => {
+          res.status(status.INTERNAL_SERVER_ERROR).json({ error })
+          console.log(mongooseErrorBeautify(error))
+        });
     })
-    .catch(error => res.status(status.INTERNAL_SERVER_ERROR).json({ error }));
+    .catch(error => {
+      res.status(status.INTERNAL_SERVER_ERROR).json({ error })
+      console.log(mongooseErrorBeautify(error))
+    });
 };

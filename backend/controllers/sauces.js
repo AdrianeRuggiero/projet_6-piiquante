@@ -1,6 +1,7 @@
 const Sauce = require('../models/sauce');
 const fs = require('fs');
 const status = require('http-status');
+const mongooseErrorBeautify = require("mongoose-error-beautify");
 
 
 //Creates Sauce
@@ -10,15 +11,13 @@ exports.createSauce = (req, res, next) => {
     ...sauceObject,
     imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`,
   });
-  console.log(sauce)
   sauce.save() //Saves the new sauce in the database
     .then(() => res.status(status.CREATED).json({ message: 'Nouvelle sauce sauvegardée !' }))
     .catch(error => {
+      console.log(mongooseErrorBeautify(error))
       res.status(status.BAD_REQUEST).json({ error });
-      console.log(error)
-      fs.unlink(`images/${sauce.imageUrl.split('/images/')[1]}`, (err) => { console.log(err) })
+      fs.unlink(`images/${sauce.imageUrl.split('/images/')[1]}`, (err) => { console.log(mongooseErrorBeautify(err)) })
     })
-  console.log(sauce);
 };
 
 //Modifies Sauce
@@ -30,7 +29,10 @@ exports.modifySauce = (req, res, next) => {
     } : {...req.body };
   Sauce.updateOne({ _id: req.params.id }, {...sauceObject, _id: req.params.id })
     .then(() => res.status(status.OK).json({ message: 'Cette sauce a été modifiée' }))
-    .catch(() => res.status(status.BAD_REQUEST).json({ error }))
+    .catch(() => {
+      console.log(mongooseErrorBeautify(error))
+      res.status(status.BAD_REQUEST).json({ error })
+    })
 };
 
 
@@ -42,7 +44,10 @@ exports.deleteSauce = (req, res, next) => {
       fs.unlink(`images/${filename}`, () => { //deletes image from the filesystem
         Sauce.deleteOne({ _id: req.params.id }) //deletes the sauce from the database
           .then(() => res.status(status.OK).json({ message: 'Sauce supprimée' }))
-          .catch(error => res.status(status.BAD_REQUEST).json({ error }))
+          .catch(error => {
+            res.status(status.BAD_REQUEST).json({ error })
+            console.log(mongooseErrorBeautify(error))
+          })
       });
     })
 };
@@ -51,7 +56,10 @@ exports.deleteSauce = (req, res, next) => {
 exports.getAllSauces = (req, res, next) => {
   Sauce.find()
     .then(sauces => res.status(status.OK).json(sauces))
-    .catch(error => res.status(status.BAD_REQUEST).json({ error }))
+    .catch(error => {
+      res.status(status.BAD_REQUEST).json({ error })
+      console.log(mongooseErrorBeautify(error))
+    })
 };
 
 
@@ -59,7 +67,10 @@ exports.getAllSauces = (req, res, next) => {
 exports.getOneSauce = (req, res, next) => {
   Sauce.findOne({ _id: req.params.id })
     .then(sauce => res.status(status.OK).json(sauce))
-    .catch(error => res.status(status.NOT_FOUND).json({ error }))
+    .catch(error => {
+      res.status(status.NOT_FOUND).json({ error })
+      console.log(mongooseErrorBeautify(error))
+    })
 };
 
 //Management of likes
@@ -78,7 +89,10 @@ exports.likeSauce = (req, res) => {
             .catch((error) => res.status(status.BAD_REQUEST).json({ error }));
         }
       })
-      .catch((error) => res.status(status.BAD_REQUEST).json({ error }));
+      .catch((error) => {
+        res.status(status.BAD_REQUEST).json({ error })
+        console.log(mongooseErrorBeautify(error))
+      });
   }
 
   // Dislike
@@ -88,10 +102,16 @@ exports.likeSauce = (req, res) => {
         if (!sauce.usersDisliked.includes(userId)) {
           Sauce.updateOne({ _id: sauceId }, { $inc: { dislikes: 1 }, $push: { usersDisliked: userId } })
             .then(() => res.status(status.CREATED).json({ message: 'Votre Dislike a été ajoutée à cette sauce!' }))
-            .catch((error) => res.status(status.BAD_REQUEST).json({ error }));
+            .catch((error) => {
+              res.status(status.BAD_REQUEST).json({ error })
+              console.log(mongooseErrorBeautify(error))
+            });
         }
       })
-      .catch((error) => res.status(status.BAD_REQUEST).json({ error }));
+      .catch((error) => {
+        res.status(status.BAD_REQUEST).json({ error })
+        console.log(mongooseErrorBeautify(error))
+      });
   }
 
   // Anulation Like ou Dislike
@@ -102,16 +122,25 @@ exports.likeSauce = (req, res) => {
         if (sauce.usersLiked.includes(userId)) {
           Sauce.updateOne({ _id: sauceId }, { $inc: { likes: -1 }, $pull: { usersLiked: userId } })
             .then(() => res.status(status.CREATED).json({ message: 'Votre avez enlevée votre Like' }))
-            .catch((error) => res.status(status.BAD_REQUEST).json({ error }));
+            .catch((error) => {
+              res.status(status.BAD_REQUEST).json({ error })
+              console.log(mongooseErrorBeautify(error))
+            });
         }
 
         // if user dislikes the sauce
         if (sauce.usersDisliked.includes(userId)) {
           Sauce.updateOne({ _id: sauceId }, { $inc: { dislikes: -1 }, $pull: { usersDisliked: userId } })
             .then(() => res.status(status.CREATED).json({ message: 'Votre avez enlevée votre Dislike' }))
-            .catch((error) => res.status(status.BAD_REQUEST).json({ error }));
+            .catch((error) => {
+              res.status(status.BAD_REQUEST).json({ error })
+              console.log(mongooseErrorBeautify(error))
+            });
         }
       })
-      .catch((error) => res.status(status.BAD_REQUEST).json({ error }));
+      .catch((error) => {
+        res.status(status.BAD_REQUEST).json({ error })
+        console.log(mongooseErrorBeautify(error))
+      });
   }
 };
