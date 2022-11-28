@@ -114,7 +114,7 @@ exports.likeSauce = (req, res) => {
       });
   }
 
-  // Anulation Like ou Dislike
+  //Revoke Like or Dislike
   if (like === 0) {
     Sauce.findOne({ _id: sauceId })
       .then((sauce) => {
